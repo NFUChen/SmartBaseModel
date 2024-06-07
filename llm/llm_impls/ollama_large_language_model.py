@@ -1,9 +1,13 @@
+import pprint
 from typing import Any, Literal, TypedDict
+
+from loguru import logger
 from smart_base_model.llm.large_language_model_base import LargeLanguageModelBase
 import ollama
 
 
 class OllamaModelConfig(TypedDict):
+    mode: Literal["text", "json"]
     host: str
     port: int
     model_name: Literal[
@@ -21,6 +25,8 @@ class OllamaModelConfig(TypedDict):
         "llama2-uncensored",
         "llava",
         "solar",
+        "llava:34b",
+        "codellama:34b",
     ]
 
 
@@ -38,10 +44,36 @@ class OllamaModel(LargeLanguageModelBase[ollama.Message]):
         self.model_name = model_config["model_name"]
 
         self.client = ollama.Client(url)
+        self.mode = model_config["mode"]
 
     def ask(self, prompt: str) -> str:
         return self.chat([{"role": "user", "content": prompt}])
 
-    def chat(self, prompts: list[ollama.Message]) -> Any:
+    def chat(self, prompts: list[ollama.Message], is_json_mode: bool = False) -> str:
         messages: list[ollama.Message] = [self.system_prompt_dict, *prompts]
-        return self.client.chat(model=self.model_name, messages=messages)
+        response = self.client.chat(
+            model=self.model_name,
+            messages=messages,
+            format=("json" if self.mode == "json" else ""),
+        )
+        logger.info(f"[CHAT RESPONSE]\n {pprint.pformat(response)}")
+        return response["message"]["content"]  # type: ignore
+
+    def async_chat(self, prompts: list[ollama.Message]) -> None:
+        messages: list[ollama.Message] = [self.system_prompt_dict, *prompts]
+        stream = self.client.chat(
+            model=self.model_name,
+            messages=messages,
+            format=("json" if self.mode == "json" else ""),
+            stream=True,
+        )
+        current_message = ""
+        for chunk in stream:
+            chunk_message = chunk["message"]["content"]  # type: ignore
+            if chunk is None:
+                continue
+            current_message += chunk_message
+            self.message_subject.next(current_message)
+
+    def async_ask(self, prompt: str) -> None:
+        return self.async_chat([{"role": "user", "content": prompt}])
