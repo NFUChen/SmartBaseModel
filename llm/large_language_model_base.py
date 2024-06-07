@@ -1,8 +1,15 @@
 from abc import abstractmethod
 from enum import Enum
 from typing import Generic, TypeVar
+from typing_extensions import Literal, TypedDict
 
 from smart_base_model.messaging.behavior_subject import BehaviorSubject
+
+
+class MessageDict(TypedDict):
+    role: Literal["user", "assistant", "system"]
+    content: str
+
 
 T = TypeVar("T")
 

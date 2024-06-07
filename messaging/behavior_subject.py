@@ -25,18 +25,18 @@ class Observable(Generic[T]):
 
 class BehaviorSubject(Generic[T]):
     """
-    A BehaviorSubject is a type of Observable that emits its current value to new subscribers when they subscribe. 
+    A BehaviorSubject is a type of Observable that emits its current value to new subscribers when they subscribe.
     It maintains the last emitted value and immediately emits it to any new subscriber.
-    
+
     The BehaviorSubject class provides the following methods:
-    
+
     - `__init__()`: Initializes a new BehaviorSubject instance with an optional initial value.
     - `as_observable()`: Returns an Observable view of the BehaviorSubject.
     - `subscribe(subscriber)`: Subscribes the given callable to the BehaviorSubject. The callable will be called with the next emitted value.
     - `next(value)`: Emits the given value to all subscribed callables.
     - `value`: Returns the last emitted value, or None if no value has been emitted yet.
     """
-        
+
     def __init__(self) -> None:
         self._value: Optional[T] = None
         self._observable = Observable[T]()
