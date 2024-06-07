@@ -35,3 +35,10 @@ Schema:
 Prompt:
     %s
 """
+
+
+ERROR_CORRECTION_PROMPT = """
+Encountered an error: {error}. 
+Correct it according to the prompt's requirements and reference for current response (if it is a valid json for provided schema, otherwise, ignore it) for your future steps. 
+Ensure your response aligns with the prompt and return it in JSON format that can be directly modeled by the program.
+"""

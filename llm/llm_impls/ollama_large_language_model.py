@@ -27,6 +27,7 @@ class OllamaModelConfig(TypedDict):
         "solar",
         "llava:34b",
         "codellama:34b",
+        "codellama:13b",
     ]
 
 
