@@ -18,6 +18,11 @@ class ModelType(Enum):
     OPENAI = "openai"
 
 
+class StreamChunkMessageDict(TypedDict):
+    content: str
+    is_final_word: bool
+
+
 class LargeLanguageModelBase(Generic[T]):
     """
     Defines the base class for large language models (LLMs) in the smart_base_model package.
@@ -28,15 +33,18 @@ class LargeLanguageModelBase(Generic[T]):
     """
 
     MODEL_TYPE: ModelType
+    BASE_PROMPT: str = ""
 
-    message_subject: BehaviorSubject[str] = BehaviorSubject[str]()
+    message_subject: BehaviorSubject[StreamChunkMessageDict] = BehaviorSubject[
+        StreamChunkMessageDict
+    ]()
 
     @abstractmethod
-    def async_ask(self, prompt: str) -> None:
+    def async_ask(self, prompt: str) -> StreamChunkMessageDict:
         raise NotImplementedError()
 
     @abstractmethod
-    def async_chat(self, prompts: list[T]) -> None:
+    def async_chat(self, prompts: list[T]) -> StreamChunkMessageDict:
         raise NotImplementedError()
 
     @abstractmethod

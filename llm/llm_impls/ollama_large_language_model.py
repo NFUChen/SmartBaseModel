@@ -1,8 +1,11 @@
 import pprint
-from typing import Any, Literal, TypedDict
+from typing import Any, Iterable, Literal, TypedDict
 
 from loguru import logger
-from smart_base_model.llm.large_language_model_base import LargeLanguageModelBase
+from smart_base_model.llm.large_language_model_base import (
+    LargeLanguageModelBase,
+    StreamChunkMessageDict,
+)
 import ollama
 
 
@@ -60,7 +63,9 @@ class OllamaModel(LargeLanguageModelBase[ollama.Message]):
         logger.info(f"[CHAT RESPONSE]\n {pprint.pformat(response)}")
         return response["message"]["content"]  # type: ignore
 
-    def async_chat(self, prompts: list[ollama.Message]) -> None:
+    def async_chat(
+        self, prompts: list[ollama.Message]
+    ) -> Iterable[StreamChunkMessageDict]:
         messages: list[ollama.Message] = [self.system_prompt_dict, *prompts]
         stream = self.client.chat(
             model=self.model_name,
@@ -74,7 +79,14 @@ class OllamaModel(LargeLanguageModelBase[ollama.Message]):
             if chunk is None:
                 continue
             current_message += chunk_message
-            self.message_subject.next(current_message)
+            message_chunk: StreamChunkMessageDict = {
+                "content": current_message,
+                "is_final_word": False,
+            }
+            yield message_chunk
+        message_chunk["is_final_word"] = True
+        yield message_chunk
 
-    def async_ask(self, prompt: str) -> None:
-        return self.async_chat([{"role": "user", "content": prompt}])
+    def async_ask(self, prompt: str) -> Iterable[StreamChunkMessageDict]:
+        for chunk in self.async_chat([{"role": "user", "content": prompt}]):
+            yield chunk

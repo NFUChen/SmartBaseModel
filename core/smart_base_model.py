@@ -67,7 +67,7 @@ class SmartBaseModel(BaseModel, Generic[T]):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt},
             ]
-            logger.info(f"[CLASS MODELLING] Taget model: \n{self_source_code}")
+            logger.info(f"[CLASS MODELLING] Target model: \n{self_source_code}")
             response = llm.chat(messages)
 
             logger.info(f"[MODEL RESPONSE] Response json: \n{response}")
@@ -118,7 +118,7 @@ class SmartBaseModel(BaseModel, Generic[T]):
                 current_attempt += 1
                 if current_attempt > cls._MAX_ATTEMPT:
                     logger.critical(
-                        "[EXCEED MAX ATTEMPT] Exit model_ask loop for prevening recusively query on model..."
+                        "[EXCEED MAX ATTEMPT] Exit model_ask loop for preventing recursively query on model..."
                     )
                     return
                 return model_ask_wrapper(scratch_pad)

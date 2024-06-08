@@ -4,6 +4,7 @@ from typing import Callable, Iterable, Literal, TypedDict, cast
 from loguru import logger
 from smart_base_model.llm.large_language_model_base import (
     LargeLanguageModelBase,
+    StreamChunkMessageDict,
     MessageDict,
     ModelType,
 )
@@ -15,17 +16,17 @@ from openai.types.chat import (
 )
 
 
-class OpenaiModelConfig(TypedDict):
+class OpenAIModelConfig(TypedDict):
     api_key: str
     model_name: str
     mode: Literal["text", "json"]
 
 
-class OpenaiModel(LargeLanguageModelBase[MessageDict]):
+class OpenAIModel(LargeLanguageModelBase[MessageDict]):
     """
     Implements an OpenAI-based large language model (LLM) for use in the SmartBaseModel framework.
 
-    The `OpenaiModel` class provides an interface to interact with the OpenAI API to generate text completions.
+    The `OpenAIModel` class provides an interface to interact with the OpenAI API to generate text completions.
     It supports both streaming and non-streaming modes, and allows for the use of a system prompt to provide context for the model.
 
     The class has the following methods:
@@ -41,7 +42,7 @@ class OpenaiModel(LargeLanguageModelBase[MessageDict]):
     MODEL_TYPE = ModelType.OPENAI
 
     def __init__(
-        self, model_config: OpenaiModelConfig, system_prompt: str = ""
+        self, model_config: OpenAIModelConfig, system_prompt: str = ""
     ) -> None:
         self.system_prompt_dict: MessageDict = {
             "role": "system",
@@ -71,7 +72,9 @@ class OpenaiModel(LargeLanguageModelBase[MessageDict]):
             stream=is_stream,
         )
 
-    def async_chat(self, prompts: list[MessageDict]) -> None:
+    def async_chat(
+        self, prompts: list[MessageDict]
+    ) -> Iterable[StreamChunkMessageDict]:
         messages: list[MessageDict] = [self.system_prompt_dict, *prompts]
         stream_func = self._create_chat_func(self.model_name, messages, True)
         current_message = ""
@@ -81,10 +84,17 @@ class OpenaiModel(LargeLanguageModelBase[MessageDict]):
             if message is None:
                 continue
             current_message += message
-            self.message_subject.next(current_message)
+            message_chunk: StreamChunkMessageDict = {
+                "content": current_message,
+                "is_final_word": False,
+            }
+            yield message_chunk
+        message_chunk["is_final_word"] = True
+        yield message_chunk
 
-    def async_ask(self, prompt: str) -> None:
-        self.async_chat([{"role": "user", "content": prompt}])
+    def async_ask(self, prompt: str) -> Iterable[StreamChunkMessageDict]:
+        for chunk in self.async_chat([{"role": "user", "content": prompt}]):
+            yield chunk
 
     def chat(self, prompts: list[MessageDict]) -> str:
         messages: list[MessageDict] = [self.system_prompt_dict, *prompts]
