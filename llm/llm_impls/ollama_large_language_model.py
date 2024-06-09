@@ -1,12 +1,11 @@
 import pprint
 from typing import Any, Iterable, Literal, TypedDict
 
-from loguru import logger
-from smart_base_model.llm.large_language_model_base import (
-    LargeLanguageModelBase,
-    StreamChunkMessageDict,
-)
 import ollama
+from loguru import logger
+
+from smart_base_model.llm.large_language_model_base import (
+    LargeLanguageModelBase, StreamChunkMessageDict)
 
 
 class OllamaModelConfig(TypedDict):

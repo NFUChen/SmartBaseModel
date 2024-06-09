@@ -2,18 +2,11 @@ from pprint import pformat
 from typing import Callable, Iterable, Literal, TypedDict, cast
 
 from loguru import logger
-from smart_base_model.llm.large_language_model_base import (
-    LargeLanguageModelBase,
-    StreamChunkMessageDict,
-    MessageDict,
-    ModelType,
-)
-
 from openai import OpenAI
-from openai.types.chat import (
-    ChatCompletion,
-    ChatCompletionChunk,
-)
+from openai.types.chat import ChatCompletion, ChatCompletionChunk
+
+from smart_base_model.llm.large_language_model_base import (
+    LargeLanguageModelBase, MessageDict, ModelType, StreamChunkMessageDict)
 
 
 class OpenAIModelConfig(TypedDict):

@@ -1,22 +1,14 @@
 import inspect
-from typing import (
-    ClassVar,
-    Generic,
-    Optional,
-    Type,
-    TypeVar,
-    TypedDict,
-)
+from typing import ClassVar, Generic, Optional, Type, TypedDict, TypeVar
+
 from loguru import logger
 from pydantic import BaseModel
 
 from smart_base_model.llm.large_language_model_base import (
-    LargeLanguageModelBase,
-    MessageDict,
-)
-from smart_base_model.prompts.model_prompt import BASE_PROMPT, ERROR_CORRECTION_PROMPT
+    LargeLanguageModelBase, MessageDict)
+from smart_base_model.prompts.model_prompt import (BASE_PROMPT,
+                                                   ERROR_CORRECTION_PROMPT)
 from smart_base_model.utils import common_utils
-
 
 T = TypeVar("T")
 

@@ -1,33 +1,30 @@
 import os
-from typing import Iterable, Type, TypeVar
+from typing import Iterable, Literal, Type, TypeVar
 
-from langchain_openai import ChatOpenAI
-from loguru import logger
-from smart_base_model.llm.large_language_model_base import (
-    LargeLanguageModelBase,
-    MessageDict,
-    StreamChunkMessageDict,
-)
-
+from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.tools import BaseTool
-
-from smart_base_model.llm.llm_impls.ollama_large_language_model import OllamaModelConfig
-from smart_base_model.llm.llm_impls.openai_large_language_model import OpenAIModelConfig
-
-
-from langchain.agents import create_tool_calling_agent, AgentExecutor
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.messages.base import BaseMessage
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.utils import AddableDict
+from langchain_core.tools import BaseTool
+from langchain_openai import ChatOpenAI
+from loguru import logger
 
+from smart_base_model.llm.large_language_model_base import (
+    LargeLanguageModelBase, MessageDict, StreamChunkMessageDict)
+from smart_base_model.llm.llm_impls.ollama_large_language_model import \
+    OllamaModelConfig
+from smart_base_model.llm.llm_impls.openai_large_language_model import \
+    OpenAIModelConfig
 
 T = TypeVar("T")
+StreamModeT = Literal["chunk", "full"]
 
 
 class LangChainToolChainModel(LargeLanguageModelBase[MessageDict]):
     """
+    **Only Available in OpenAI**
     A LargeLanguageModelBase implementation that uses the LangChain library to create a tool-calling agent.
     This model is not intended to be used with the SmartModel, as the base prompt is overridden by the LangChain library.
     The LangChainToolChainModel initializes with a LangChain chat model,
@@ -83,22 +80,31 @@ class LangChainToolChainModel(LargeLanguageModelBase[MessageDict]):
         elif "output" in chunk:
             yield f'[CHAINING FINISHED] Final Output: {chunk["output"]}'
 
-    def async_ask(self, prompt: str) -> Iterable[StreamChunkMessageDict]:
-        for chunk in self.async_chat([{"role": "user", "content": prompt}]):
+    def async_ask(
+        self, prompt: str, stream_mode: StreamModeT = "chunk"
+    ) -> Iterable[StreamChunkMessageDict]:
+        for chunk in self.async_chat(
+            [{"role": "user", "content": prompt}], stream_mode
+        ):
             yield chunk
 
     def async_chat(
-        self, prompts: list[MessageDict]
+        self, prompts: list[MessageDict], stream_mode: StreamModeT = "chunk"
     ) -> Iterable[StreamChunkMessageDict]:
+        is_full: bool = stream_mode == "full"
         executor, chat_history = self.__create_base_agent_executor_with_chat_history(
             prompts
         )
+        current_message = ""
         for chunk in executor.stream(
             {"input": prompts[-1]["content"], "chat_history": chat_history}
         ):
             for _log in self._yield_agent_output(chunk):
+                if is_full:
+                    current_message += f"\n{_log}"
+
                 message_chunk: StreamChunkMessageDict = {
-                    "content": _log,
+                    "content": current_message if is_full else _log,
                     "is_final_word": False,
                 }
                 yield message_chunk
