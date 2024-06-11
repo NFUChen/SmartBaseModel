@@ -6,7 +6,11 @@ from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 
 from smart_base_model.llm.large_language_model_base import (
-    LargeLanguageModelBase, MessageDict, ModelType, StreamChunkMessageDict)
+    LargeLanguageModelBase,
+    MessageDict,
+    ModelType,
+    StreamChunkMessageDict,
+)
 
 
 class OpenAIModelConfig(TypedDict):
@@ -34,16 +38,21 @@ class OpenAIModel(LargeLanguageModelBase[MessageDict]):
 
     MODEL_TYPE = ModelType.OPENAI
 
-    def __init__(
-        self, model_config: OpenAIModelConfig, system_prompt: str = ""
-    ) -> None:
+    def __init__(self, model_config: OpenAIModelConfig) -> None:
         self.system_prompt_dict: MessageDict = {
             "role": "system",
-            "content": system_prompt,
+            "content": "",
         }
+
         self.api_key = model_config["api_key"]
         self.model_name = model_config["model_name"]
         self.mode = model_config["mode"]
+
+    def set_system_prompt(self, prompt: str) -> None:
+        self.system_prompt_dict: MessageDict = {
+            "role": "system",
+            "content": prompt,
+        }
 
     def _create_chat_func(
         self,

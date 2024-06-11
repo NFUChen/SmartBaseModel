@@ -1,2 +1,1 @@
-from .langchain.langchain_tool_chain_model import (BaseTool,
-                                                   LangChainToolChainModel)
+from .langchain.langchain_tool_chain_model import BaseTool, LangChainToolChainModel

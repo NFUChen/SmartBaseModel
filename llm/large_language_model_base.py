@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from enum import Enum
-from typing import Generic, TypeVar
+from typing import Generic, Iterable, TypeVar
 
 from typing_extensions import Literal, TypedDict
 
@@ -41,11 +41,11 @@ class LargeLanguageModelBase(Generic[T]):
     ]()
 
     @abstractmethod
-    def async_ask(self, prompt: str) -> StreamChunkMessageDict:
+    def async_ask(self, prompt: str) -> Iterable[StreamChunkMessageDict]:
         raise NotImplementedError()
 
     @abstractmethod
-    def async_chat(self, prompts: list[T]) -> StreamChunkMessageDict:
+    def async_chat(self, prompts: list[T]) -> Iterable[StreamChunkMessageDict]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -55,3 +55,7 @@ class LargeLanguageModelBase(Generic[T]):
     @abstractmethod
     def chat(self, prompts: list[T]) -> str:
         raise NotImplementedError()
+
+    @abstractmethod
+    def set_system_prompt(sel, prompt: str) -> None:
+        raise NotImplementedError

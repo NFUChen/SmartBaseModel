@@ -1,3 +1,4 @@
+import re
 from typing import Any, Iterable, Optional, Type, Union, get_args
 
 from pydantic import BaseModel
@@ -49,3 +50,36 @@ def recursively_search_base_model_dependencies(
 
     dfs(source_cls)
     return deps
+
+
+def inject_locals_decorator(func):
+    import functools
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        if "session" not in globals():
+            globals()["session"] = {}
+        globals()["session"][func.__name__] = locals()
+        return result
+
+    return wrapper
+
+
+def inject_decorator_for_source_code(lines: list[str], decorator_name: str) -> str:
+    # Prepare the decorator line
+    decorator_line = f"@{decorator_name}\n"
+
+    # Create a new list for the modified source code
+    modified_lines = []
+
+    # Find all function definitions and inject the decorator above each one
+    func_pattern = re.compile(
+        r"^\s*def\s+\w+\s*\("
+    )  # Pattern to match any function definition
+    for line in lines:
+        if func_pattern.match(line):
+            # Insert the decorator line above the function definition
+            modified_lines.append(decorator_line)
+        modified_lines.append(line)
+    return "\n".join(modified_lines)

@@ -1,4 +1,7 @@
 import inspect
+import os
+import pprint
+import time
 from typing import ClassVar, Generic, Optional, Type, TypedDict, TypeVar
 
 from loguru import logger
@@ -6,7 +9,7 @@ from pydantic import BaseModel
 
 from smart_base_model.llm.large_language_model_base import (
     LargeLanguageModelBase, MessageDict)
-from smart_base_model.prompts.model_prompt import (BASE_PROMPT,
+from smart_base_model.prompts.model_prompts import (BASE_PROMPT,
                                                    ERROR_CORRECTION_PROMPT)
 from smart_base_model.utils import common_utils
 
@@ -41,7 +44,7 @@ class SmartBaseModel(BaseModel, Generic[T]):
     def _get_model_with_source_code(cls) -> tuple[Type[BaseModel], str]:
         model_cls = cls.__mro__[0]
         model_classes = common_utils.recursively_search_base_model_dependencies(
-            model_cls
+            source_cls=model_cls
         )
         all_source_code: set[str] = set()
         for _cls in model_classes:
@@ -50,7 +53,9 @@ class SmartBaseModel(BaseModel, Generic[T]):
         return (model_cls, "\n".join(all_source_code))
 
     @classmethod
-    def model_ask_json(cls, prompt: str, llm: LargeLanguageModelBase) -> Optional[str]:
+    def model_ask_json(
+        cls, prompt: str, llm: LargeLanguageModelBase[MessageDict]
+    ) -> Optional[str]:
         try:
             _self_model_cls, self_source_code = cls._get_model_with_source_code()
 
@@ -60,10 +65,10 @@ class SmartBaseModel(BaseModel, Generic[T]):
                 {"role": "user", "content": prompt},
             ]
             logger.info(f"[CLASS MODELLING] Target model: \n{self_source_code}")
-            response = llm.chat(messages)
-
-            logger.info(f"[MODEL RESPONSE] Response json: \n{response}")
-            return response
+            for chunk in llm.async_chat(messages):
+                print(chunk["content"], end="")
+            logger.info(f"[MODEL RESPONSE] Response json: \n{chunk['content']}")
+            return chunk["content"]
         except Exception as error:
             logger.exception(error)
             return

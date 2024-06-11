@@ -5,7 +5,9 @@ import ollama
 from loguru import logger
 
 from smart_base_model.llm.large_language_model_base import (
-    LargeLanguageModelBase, StreamChunkMessageDict)
+    LargeLanguageModelBase,
+    StreamChunkMessageDict,
+)
 
 
 class OllamaModelConfig(TypedDict):
@@ -34,12 +36,10 @@ class OllamaModelConfig(TypedDict):
 
 
 class OllamaModel(LargeLanguageModelBase[ollama.Message]):
-    def __init__(
-        self, model_config: OllamaModelConfig, system_prompt: str = ""
-    ) -> None:
+    def __init__(self, model_config: OllamaModelConfig) -> None:
         self.system_prompt_dict: ollama.Message = {
             "role": "system",
-            "content": system_prompt,
+            "content": "",
         }
         self.model_config = model_config
         url = f'http://{model_config["host"]}:{model_config["port"]}'
@@ -48,6 +48,12 @@ class OllamaModel(LargeLanguageModelBase[ollama.Message]):
 
         self.client = ollama.Client(url)
         self.mode = model_config["mode"]
+
+    def set_system_prompt(self, prompt: str) -> None:
+        self.system_prompt_dict: ollama.Message = {
+            "role": "system",
+            "content": prompt,
+        }
 
     def ask(self, prompt: str) -> str:
         return self.chat([{"role": "user", "content": prompt}])

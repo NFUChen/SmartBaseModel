@@ -12,11 +12,12 @@ from langchain_openai import ChatOpenAI
 from loguru import logger
 
 from smart_base_model.llm.large_language_model_base import (
-    LargeLanguageModelBase, MessageDict, StreamChunkMessageDict)
-from smart_base_model.llm.llm_impls.ollama_large_language_model import \
-    OllamaModelConfig
-from smart_base_model.llm.llm_impls.openai_large_language_model import \
-    OpenAIModelConfig
+    LargeLanguageModelBase,
+    MessageDict,
+    StreamChunkMessageDict,
+)
+from smart_base_model.llm.llm_impls.ollama_large_language_model import OllamaModelConfig
+from smart_base_model.llm.llm_impls.openai_large_language_model import OpenAIModelConfig
 
 T = TypeVar("T")
 StreamModeT = Literal["chunk", "full"]
