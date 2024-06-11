@@ -46,7 +46,7 @@ class CommandExecutor:
             self.is_executing = False
 
     def execute(self, command: str, is_async_execution: bool = True) -> bool:
-        func = lambda: self._init_popen(command)
+        func = lambda: self._init_popen(command)  # noqa: E731
         if self.process is not None:
             self.process.kill()
             return False
@@ -67,7 +67,6 @@ class CommandExecutor:
         if self.process.stdout is not None:
             for line in self.process.stdout:
                 line = line.strip()
-                logger.debug(line)
                 self.log_behavior_subject.next(line)
                 self.stdout_queue.append(line)
                 self._handle_kill_process()

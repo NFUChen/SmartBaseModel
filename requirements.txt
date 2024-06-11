@@ -73,3 +73,4 @@ websockets==12.0
 yarl==1.9.4
 llama-index==0.10.43
 llama-index-llms-ollama==0.1.5
+partial-json-parser==0.2.1.1.post3

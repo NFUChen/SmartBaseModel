@@ -1,16 +1,20 @@
 import inspect
-import os
-import pprint
-import time
-from typing import ClassVar, Generic, Optional, Type, TypedDict, TypeVar
+from typing import ClassVar, Generic, Optional, Type, TypeVar, TypedDict
+from uuid import UUID, uuid4
 
 from loguru import logger
 from pydantic import BaseModel
 
+from smart_base_model.core.smart_base_model.prompts.model_prompts import (
+    BASE_PROMPT,
+    ERROR_CORRECTION_PROMPT,
+)
 from smart_base_model.llm.large_language_model_base import (
-    LargeLanguageModelBase, MessageDict)
-from smart_base_model.prompts.model_prompts import (BASE_PROMPT,
-                                                   ERROR_CORRECTION_PROMPT)
+    LargeLanguageModelBase,
+    MessageDict,
+    StreamChunkMessageDict,
+)
+from smart_base_model.messaging.behavior_subject import BehaviorSubject
 from smart_base_model.utils import common_utils
 
 T = TypeVar("T")
@@ -34,8 +38,16 @@ class ScratchPad(BaseModel):
         """
 
 
+class MessageSubjectResponse(TypedDict):
+    id: str
+    chunk_message: StreamChunkMessageDict
+
+
 class SmartBaseModel(BaseModel, Generic[T]):
     _MAX_ATTEMPT: ClassVar[int] = 5
+    message_subject: ClassVar[BehaviorSubject[MessageSubjectResponse]] = (
+        BehaviorSubject[MessageSubjectResponse]()
+    )
 
     class Config:
         arbitrary_types_allowed = True
@@ -54,7 +66,10 @@ class SmartBaseModel(BaseModel, Generic[T]):
 
     @classmethod
     def model_ask_json(
-        cls, prompt: str, llm: LargeLanguageModelBase[MessageDict]
+        cls,
+        prompt: str,
+        llm: LargeLanguageModelBase[MessageDict],
+        response_id: UUID = uuid4(),
     ) -> Optional[str]:
         try:
             _self_model_cls, self_source_code = cls._get_model_with_source_code()
@@ -66,7 +81,10 @@ class SmartBaseModel(BaseModel, Generic[T]):
             ]
             logger.info(f"[CLASS MODELLING] Target model: \n{self_source_code}")
             for chunk in llm.async_chat(messages):
-                print(chunk["content"], end="")
+                cls.message_subject.next(
+                    {"id": str(response_id), "chunk_message": chunk}
+                )
+            cls.message_subject.next({"id": str(response_id), "chunk_message": chunk})
             logger.info(f"[MODEL RESPONSE] Response json: \n{chunk['content']}")
             return chunk["content"]
         except Exception as error:
@@ -74,7 +92,9 @@ class SmartBaseModel(BaseModel, Generic[T]):
             return
 
     @classmethod
-    def model_ask(cls, prompt: str, llm: LargeLanguageModelBase) -> Optional[T]:
+    def model_ask(
+        cls, prompt: str, llm: LargeLanguageModelBase, response_id: UUID = uuid4()
+    ) -> Optional[T]:
         """
         Recursively attempts to generate a response from the large language model (LLM) for the given prompt, handling any exceptions that may occur.
 
@@ -97,7 +117,9 @@ class SmartBaseModel(BaseModel, Generic[T]):
         def model_ask_wrapper(scratch_pad: ScratchPad) -> Optional[T]:
             nonlocal current_attempt
             try:
-                json_response = cls.model_ask_json(scratch_pad.as_text(), llm)
+                json_response = cls.model_ask_json(
+                    scratch_pad.as_text(), llm, response_id
+                )
                 if json_response is None:
                     return
                 return cls.model_validate_json(json_response)  # type: ignore

@@ -1,20 +1,23 @@
 import inspect
 import json
 import os
+from pprint import pformat
 import re
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from loguru import logger
 from openai import BaseModel
 from pydantic import computed_field
 
-import smart_base_model.utils.common_utils as common_utils
-from smart_base_model.core.python_code_interpreter.command_executor import (
+from smart_base_model.core.py_gpt.python_code_interpreter.command_executor import (
     CommandExecutor,
 )
-from smart_base_model.core.python_code_interpreter.python_source import PythonSource
-from smart_base_model.core.python_code_interpreter.template import CODE_TEMPLATE
+from smart_base_model.core.py_gpt.python_code_interpreter.python_source import (
+    PythonSource,
+)
+from smart_base_model.core.py_gpt.python_code_interpreter.template import CODE_TEMPLATE
+import smart_base_model.utils.common_utils as common_utils
 
 FilePath = str
 
@@ -29,6 +32,7 @@ class InterpreterResponse(BaseModel):
         code_executed (str): The Python code that was executed.
         stdout (Optional[str]): The standard output resulting from the code execution, if any.
         stderr (Optional[str]): The standard error resulting from the code execution, if any.
+        session (dict[str, Any]): A dictionary containing any session data captured during the code execution.
 
     Properties:
         is_successful (bool): Indicates whether the code execution was successful. Returns True if stderr is None or empty, otherwise False.
@@ -37,8 +41,9 @@ class InterpreterResponse(BaseModel):
     response_id: str
     source: PythonSource
     code_executed: str
-    stdout: Optional[str] = None
-    stderr: Optional[str] = None
+    stdout: str = ""
+    stderr: str = ""
+    session: dict[str, Any]
 
     @computed_field
     @property
@@ -49,8 +54,7 @@ class InterpreterResponse(BaseModel):
         Returns:
             bool: True if there were no errors (stderr is None or empty), False otherwise.
         """
-        return self.stderr is None or len(self.stderr) == 0
-
+        return len(self.stderr) == 0
 
 
 class PythonCodeInterpreter:
@@ -112,6 +116,7 @@ class PythonCodeInterpreter:
         stdout = "\n".join(self.executor.stdout_queue)
         stderr = "\n".join(self.executor.stderr_queue)
         session = self.__parse_session_stdout(stdout)
+        logger.info(pformat(session))
 
         return InterpreterResponse(
             response_id=file_name,
@@ -119,4 +124,5 @@ class PythonCodeInterpreter:
             code_executed=final_source_code,
             stdout=stdout,
             stderr=stderr,
+            session=session,
         )
