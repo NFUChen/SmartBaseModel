@@ -1,3 +1,4 @@
+from enum import Enum
 import inspect
 from typing import ClassVar, Generic, Optional, Type, TypeVar, TypedDict
 from uuid import UUID, uuid4
@@ -56,7 +57,7 @@ class SmartBaseModel(BaseModel, Generic[T]):
     def _get_model_with_source_code(cls) -> tuple[Type[BaseModel], str]:
         model_cls = cls.__mro__[0]
         model_classes = common_utils.recursively_search_base_model_dependencies(
-            source_cls=model_cls
+            source_cls=model_cls, include_classes= [Enum]
         )
         all_source_code: set[str] = set()
         for _cls in model_classes:

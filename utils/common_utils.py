@@ -6,7 +6,7 @@ from typing_extensions import get_origin
 
 
 def recursively_search_base_model_dependencies(
-    source_cls: Type[BaseModel],
+    source_cls: Type[BaseModel], include_classes: list[Type[Any]] = list()
 ) -> set[Type[BaseModel]]:
     def _optional_mro(_cls: Type[Any]) -> Optional[tuple[type, ...]]:
         try:
@@ -20,6 +20,10 @@ def recursively_search_base_model_dependencies(
         _source_mro = _optional_mro(source_cls)
         if _source_mro is None:
             return
+
+        for _type in include_classes:
+            if _type in _source_mro:
+                deps.add(source_cls)
 
         if BaseModel in _source_mro:
             deps.add(source_cls)
