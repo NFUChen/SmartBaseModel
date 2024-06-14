@@ -57,5 +57,8 @@ class LargeLanguageModelBase(Generic[T]):
         raise NotImplementedError()
 
     @abstractmethod
-    def set_system_prompt(sel, prompt: str) -> None:
+    def set_system_prompt(self, prompt: str) -> None:
         raise NotImplementedError
+
+    def get_model_name(self) -> str:
+        return self.__class__.__name__
