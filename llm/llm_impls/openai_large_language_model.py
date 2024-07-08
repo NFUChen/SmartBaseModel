@@ -72,6 +72,9 @@ class OpenAIModel(LargeLanguageModelBase[MessageDict]):
             messages=messages,  # type: ignore
             model=model_name,
             stream=is_stream,
+            stream_options={
+			    "include_usage": True
+            }
         )
 
     def async_chat(
@@ -82,6 +85,8 @@ class OpenAIModel(LargeLanguageModelBase[MessageDict]):
         current_message = ""
         for chunk in stream_func():  # type: ignore
             chunk: ChatCompletionChunk
+            if len(chunk.choices) == 0:
+                continue
             message = chunk.choices[0].delta.content
             if message is None:
                 continue
@@ -92,6 +97,7 @@ class OpenAIModel(LargeLanguageModelBase[MessageDict]):
             }
             yield message_chunk
         message_chunk["is_final_word"] = True
+        logger.info(f"API Usage: {chunk.usage}")
         yield message_chunk
 
     def async_ask(self, prompt: str) -> Iterable[StreamChunkMessageDict]:
