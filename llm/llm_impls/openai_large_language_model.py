@@ -66,15 +66,14 @@ class OpenAIModel(LargeLanguageModelBase[MessageDict]):
             "json": {"type": "json_object"},
             "text": {"type": "text"},
         }
+        stream_options = {"include_usage": True} if is_stream else None
 
         return lambda: client.chat.completions.create(
             response_format=_format[self.mode],  # type: ignore
             messages=messages,  # type: ignore
             model=model_name,
             stream=is_stream,
-            stream_options={
-			    "include_usage": True
-            }
+            stream_options= stream_options # type: ignore
         )
 
     def async_chat(
