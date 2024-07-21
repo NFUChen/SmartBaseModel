@@ -12,6 +12,7 @@ from smart_base_model.llm.large_language_model_base import (
     StreamChunkMessageDict,
 )
 
+import partial_json_parser
 
 class OpenAIModelConfig(TypedDict):
     api_key: str
@@ -90,15 +91,23 @@ class OpenAIModel(LargeLanguageModelBase[MessageDict]):
             if message is None:
                 continue
             current_message += message
+            if len(current_message) == 0:
+                continue
             message_chunk: StreamChunkMessageDict = {
-                "content": current_message,
+                "content": (
+                    partial_json_parser.ensure_json(current_message) 
+                    if self.is_json_mode() else current_message
+                ),
                 "is_final_word": False,
             }
             yield message_chunk
         message_chunk["is_final_word"] = True
         logger.info(f"API Usage: {chunk.usage}")
         yield message_chunk
-
+    
+    def is_json_mode(self) -> bool:
+        return self.mode == "json"    
+    
     def async_ask(self, prompt: str) -> Iterable[StreamChunkMessageDict]:
         for chunk in self.async_chat([{"role": "user", "content": prompt}]):
             yield chunk
