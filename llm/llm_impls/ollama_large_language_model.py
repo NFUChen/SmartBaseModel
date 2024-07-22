@@ -1,7 +1,7 @@
 import pprint
 from typing import Iterable, Literal
 from typing_extensions import TypedDict
-
+import partial_json_parser
 import ollama
 from loguru import logger
 
@@ -59,12 +59,12 @@ class OllamaModel(LargeLanguageModelBase[ollama.Message]):
     def ask(self, prompt: str) -> str:
         return self.chat([{"role": "user", "content": prompt}])
 
-    def chat(self, prompts: list[ollama.Message], is_json_mode: bool = False) -> str:
+    def chat(self, prompts: list[ollama.Message]) -> str:
         messages: list[ollama.Message] = [self.system_prompt_dict, *prompts]
         response = self.client.chat(
             model=self.model_name,
             messages=messages,
-            format=("json" if self.mode == "json" else ""),
+            format=("json" if self.is_json_mode() else ""),
         )
         logger.info(f"[CHAT RESPONSE]\n {pprint.pformat(response)}")
         return response["message"]["content"]  # type: ignore
@@ -86,12 +86,15 @@ class OllamaModel(LargeLanguageModelBase[ollama.Message]):
                 continue
             current_message += chunk_message
             message_chunk: StreamChunkMessageDict = {
-                "content": current_message,
+                "content":  partial_json_parser.ensure_json(current_message) if self.is_json_mode() else current_message,
                 "is_final_word": False,
             }
             yield message_chunk
         message_chunk["is_final_word"] = True
         yield message_chunk
+
+    def is_json_mode(self) -> bool:
+        return self.mode == "json"    
 
     def async_ask(self, prompt: str) -> Iterable[StreamChunkMessageDict]:
         for chunk in self.async_chat([{"role": "user", "content": prompt}]):
