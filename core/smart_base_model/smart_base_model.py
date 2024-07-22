@@ -1,6 +1,7 @@
 from enum import Enum
 import inspect
-from typing import ClassVar, Generic, Optional, Type, TypeVar, TypedDict
+from typing import ClassVar, Generic, Optional, Type, TypeVar
+from typing_extensions import TypedDict
 from uuid import UUID, uuid4
 
 from loguru import logger

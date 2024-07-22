@@ -1,5 +1,6 @@
 import pprint
-from typing import Any, Iterable, Literal, TypedDict
+from typing import Iterable, Literal
+from typing_extensions import TypedDict
 
 import ollama
 from loguru import logger

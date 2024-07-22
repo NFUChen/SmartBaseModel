@@ -1,5 +1,6 @@
 from pprint import pformat
-from typing import Callable, Iterable, Literal, TypedDict, cast
+from typing import Callable, Iterable, Literal, cast
+from typing_extensions import TypedDict
 
 from loguru import logger
 from openai import OpenAI
