@@ -46,6 +46,70 @@ class MessageSubjectResponse(TypedDict):
 
 
 class SmartBaseModel(BaseModel, Generic[T]):
+    """
+    A base model that interacts with large language models (LLMs) to generate responses based on a given prompt. 
+    This class handles exceptions and supports recursive attempts to retrieve valid outputs.
+
+    Args:
+        prompt (str): The prompt to be sent to the LLM.
+        llm (LargeLanguageModelBase): The instance of the LLM to use for generating the response.
+
+    Returns:
+        Optional[T]: The validated response from the LLM or None if an exception occurs.
+
+    This abstract base class provides a common interface for different types of LLMs. 
+    Subclasses must implement the abstract methods: `async_ask`, `async_chat`, `ask`, and `chat`.
+
+    Example:
+        Define a SmartBaseModel subclass for a `Person`:
+
+        ```python
+        class Person(SmartBaseModel["Person"]):
+            name: str
+            age: int
+            address: str
+        ```
+
+        Create an instance of an LLM (e.g., OpenAIModel):
+
+        ```python
+        model = OpenAIModel(
+            {
+                "api_key": "your-api-key-here",
+                "model_name": "gpt-3.5-turbo",
+                "mode": "json",
+            }
+        )
+        ```
+
+        Use the model to create a `Person` instance:
+
+        ```python
+        person = Person.model_ask(
+            "My name is William Chen, I am 28 years old, and I live in New York.",
+            llm=model
+        )
+        ```
+
+        This will create a `Person` object using information extracted from the prompt, leveraging the LLM for natural language understanding.
+
+    Attributes:
+        _MAX_ATTEMPT (ClassVar[int]): Maximum number of attempts to fetch a valid response.
+        message_subject (ClassVar[BehaviorSubject[MessageSubjectResponse]]): Subject to handle message responses during the LLM query process.
+
+    Methods:
+        _get_model_with_source_code(cls) -> tuple[Type[BaseModel], str]:
+            Retrieves the source code of the model and its dependencies.
+        
+        model_ask_json(cls, prompt: str, llm: LargeLanguageModelBase[MessageDict], response_id: UUID = uuid4()) -> Optional[str]:
+            Sends a prompt to the LLM and retrieves the response in JSON format.
+        
+        model_ask(cls, prompt: str, llm: LargeLanguageModelBase, response_id: UUID = uuid4()) -> Optional[T]:
+            Recursively attempts to generate a response for the given prompt, handling any exceptions that may occur.
+    """
+
+    
+    
     _MAX_ATTEMPT: ClassVar[int] = 5
     message_subject: ClassVar[BehaviorSubject[MessageSubjectResponse]] = (
         BehaviorSubject[MessageSubjectResponse]()
