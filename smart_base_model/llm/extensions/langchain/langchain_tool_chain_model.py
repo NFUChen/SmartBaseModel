@@ -16,7 +16,6 @@ from smart_base_model.llm.large_language_model_base import (
     MessageDict,
     StreamChunkMessageDict,
 )
-from smart_base_model.llm.llm_impls.ollama_large_language_model import OllamaModelConfig
 from smart_base_model.llm.llm_impls.openai_large_language_model import OpenAIModelConfig
 
 T = TypeVar("T")
@@ -57,7 +56,7 @@ class LangChainToolChainModel(LargeLanguageModelBase[MessageDict]):
         self,
         langchain_chat_model: BaseChatModel,
         tools: Iterable[BaseTool],
-        model_config: OpenAIModelConfig | OllamaModelConfig,
+        model_config: OpenAIModelConfig,
         system_prompt: str,
     ) -> None:
         self.system_prompt = system_prompt

@@ -1,10 +1,11 @@
 from pprint import pformat
 from typing import Callable, Iterable, Literal, cast
-from typing_extensions import TypedDict
 
+import partial_json_parser
 from loguru import logger
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
+from typing_extensions import TypedDict
 
 from smart_base_model.llm.large_language_model_base import (
     LargeLanguageModelBase,
@@ -13,7 +14,6 @@ from smart_base_model.llm.large_language_model_base import (
     StreamChunkMessageDict,
 )
 
-import partial_json_parser
 
 class OpenAIModelConfig(TypedDict):
     api_key: str
@@ -75,7 +75,7 @@ class OpenAIModel(LargeLanguageModelBase[MessageDict]):
             messages=messages,  # type: ignore
             model=model_name,
             stream=is_stream,
-            stream_options= stream_options # type: ignore
+            stream_options=stream_options,  # type: ignore
         )
 
     def async_chat(
@@ -96,8 +96,9 @@ class OpenAIModel(LargeLanguageModelBase[MessageDict]):
                 continue
             message_chunk: StreamChunkMessageDict = {
                 "content": (
-                    partial_json_parser.ensure_json(current_message) 
-                    if self.is_json_mode() else current_message
+                    partial_json_parser.ensure_json(current_message)
+                    if self.is_json_mode()
+                    else current_message
                 ),
                 "is_final_word": False,
             }
@@ -105,10 +106,10 @@ class OpenAIModel(LargeLanguageModelBase[MessageDict]):
         message_chunk["is_final_word"] = True
         logger.info(f"API Usage: {chunk.usage}")
         yield message_chunk
-    
+
     def is_json_mode(self) -> bool:
-        return self.mode == "json"    
-    
+        return self.mode == "json"
+
     def async_ask(self, prompt: str) -> Iterable[StreamChunkMessageDict]:
         for chunk in self.async_chat([{"role": "user", "content": prompt}]):
             yield chunk

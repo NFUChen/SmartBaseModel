@@ -1,5 +1,7 @@
 import inspect
 from typing import Iterable, Type
+
+from smart_base_model.core.py_gpt.prompts.py_gpt_prompts import PY_GPT_SYSTEM_PROMPT
 from smart_base_model.core.py_gpt.python_code_interpreter.command_executor import (
     CommandExecutor,
 )
@@ -18,7 +20,6 @@ from smart_base_model.llm.large_language_model_base import (
     StreamChunkMessageDict,
 )
 from smart_base_model.messaging.behavior_subject import BehaviorSubject
-from smart_base_model.core.py_gpt.prompts.py_gpt_prompts import PY_GPT_SYSTEM_PROMPT
 
 
 class PythonInterpreterError(BaseException):

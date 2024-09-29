@@ -1,11 +1,11 @@
-from enum import Enum
 import inspect
+from enum import Enum
 from typing import ClassVar, Generic, Optional, Type, TypeVar
-from typing_extensions import TypedDict
 from uuid import UUID, uuid4
 
 from loguru import logger
 from pydantic import BaseModel
+from typing_extensions import TypedDict
 
 from smart_base_model.core.smart_base_model.prompts.model_prompts import (
     BASE_PROMPT,
@@ -58,7 +58,7 @@ class SmartBaseModel(BaseModel, Generic[T]):
     def _get_model_with_source_code(cls) -> tuple[Type[BaseModel], str]:
         model_cls = cls.__mro__[0]
         model_classes = common_utils.recursively_search_base_model_dependencies(
-            source_cls=model_cls, include_classes= [Enum]
+            source_cls=model_cls, include_classes=[Enum]
         )
         all_source_code: set[str] = set()
         for _cls in model_classes:

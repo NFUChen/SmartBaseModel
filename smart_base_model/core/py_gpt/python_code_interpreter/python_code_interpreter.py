@@ -1,15 +1,16 @@
 import inspect
 import json
 import os
-from pprint import pformat
 import re
 import uuid
+from pprint import pformat
 from typing import Any
 
 from loguru import logger
 from openai import BaseModel
 from pydantic import computed_field
 
+import smart_base_model.utils.common_utils as common_utils
 from smart_base_model.core.py_gpt.python_code_interpreter.command_executor import (
     CommandExecutor,
 )
@@ -17,7 +18,6 @@ from smart_base_model.core.py_gpt.python_code_interpreter.python_source import (
     PythonSource,
 )
 from smart_base_model.core.py_gpt.python_code_interpreter.template import CODE_TEMPLATE
-import smart_base_model.utils.common_utils as common_utils
 
 FilePath = str
 
