@@ -1,5 +1,5 @@
 [project]
-name = "SmartBaseModel"
+name = "smart_base_model"
 version = "1.0.0"
 description = "Default template for PDM package"
 authors = [

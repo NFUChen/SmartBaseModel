@@ -1,23 +1,61 @@
-# Pydantic BaseModel with Large Language Model (LLM) Integration
+## Package Overview
 
-This repository contains a Python framework for integrating large language models (LLMs) with Pydantic's BaseModel. The framework aims to simplify the process of generating and validating model instances using LLMs, leveraging the power of natural language processing and the robustness of Pydantic's data validation and serialization capabilities.
+The `smart_base_model` package provides a base model for interacting with large language models (LLMs). It facilitates the generation of responses based on user-defined prompts and includes robust error handling mechanisms for better reliability.
 
 ## Features
 
-- **LLM Integration**: The framework provides a unified interface (`LargeLanguageModelBase`) for interacting with various LLM providers, enabling seamless integration of LLMs with Pydantic models.
-- **Model Generation**: Utilize LLMs to generate instances of Pydantic models based on natural language prompts or descriptions.
-- **Data Validation**: Leverage Pydantic's built-in data validation and serialization features to ensure the generated model instances conform to the defined schema.
-- **Extensible Architecture**: New LLM providers or models can be easily added by implementing the abstract methods defined in the base class.
-- **Asynchronous Support**: Both synchronous and asynchronous communication with LLMs is supported through the `ask` and `async_ask` methods.
-- **Message Observation**: A `BehaviorSubject` is provided to observe and respond to messages emitted by the LLM during the model generation process.
+- **Recursive Response Generation**: Attempts to fetch valid responses through multiple retries in case of errors.
+- **Extensible Design**: Allows subclasses to define specific data models, making it easy to adapt to various use cases.
+- **Integration with LLMs**: Works seamlessly with different large language model implementations.
 
-## Getting Started
+## Installation
 
-1. Clone the repository
-2. Install the required dependencies: `pip install -r requirements.txt`
-3. Define your Pydantic models and implement a concrete subclass of `LargeLanguageModelBase` for your desired LLM provider or model.
-4. Use the implemented LLM class and the provided utilities to generate and validate model instances based on natural language prompts or descriptions.
+You can install the package using pip:
 
-## Contributing
+```
+pip3 install git+https://github.com/NFUChen/SmartBaseModel.git
+```
 
-Contributions to this project are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
+## Usage
+
+### Defining a Model
+
+You can define your own data model by subclassing `SmartBaseModel`. For example, to create a `Person` model:
+
+```python
+from smart_base_model import SmartBaseModel
+
+class Person(SmartBaseModel["Person"]):
+    name: str
+    age: int
+    address: str
+```
+
+### Creating an LLM Instance
+
+Create an instance of a large language model, such as `OpenAIModel`:
+
+```python
+from smart_base_model import OpenAIModel
+
+model = OpenAIModel(
+    {
+        "api_key": "your-api-key-here",
+        "model_name": "gpt-3.5-turbo",
+        "mode": "json",
+    }
+)
+```
+
+### Generating a Model Instance
+
+Use the model to generate an instance of your defined class:
+
+```python
+person = Person.model_ask(
+    "My name is William Chen, I am 28 years old, and I live in New York.",
+    llm=model
+)
+```
+
+This will create a `Person` object populated with the data extracted from the provided prompt.
