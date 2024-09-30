@@ -13,7 +13,7 @@ The `smart_base_model` package provides a base model for interacting with large 
 You can install the package using pip:
 
 ```
-pip3 install git+https://github.com/NFUChen/SmartBaseModel.git
+pip3 install git+https://github.com/NFUChen/smart_base_model.git
 ```
 
 ## Usage
